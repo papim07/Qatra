@@ -26,7 +26,6 @@ public class Appeal implements Serializable {
         this.createdDate = createdDate;
     }
 
-    /** Sets the matched donors and returns the donor count. */
     public int assignRecipients(ArrayList<Donor> donors) {
         recipients = new ArrayList<>(donors);
         return recipients.size();
@@ -42,7 +41,6 @@ public class Appeal implements Serializable {
     /** Used when the Notification Service is unavailable (UC-7 extension 5a). */
     public void markPending() { status = PENDING; }
 
-    /** Text for the audit log. */
     public String logAppeal() {
         return "Appeal #" + appealId + " (" + bloodType + ", " + urgency + ") " + status
                 + ", " + getDonorCount() + " donors";

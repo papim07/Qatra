@@ -31,7 +31,7 @@ import javax.crypto.spec.GCMParameterSpec;
 
 /**
  * Storage for all entities (stands in for the PostgreSQL database).
- * Saved to a file when the app goes to the background, so the app stays fast.
+ * Saved to an encrypted file when the app goes to the background.
  */
 public class QatraDatabase implements Serializable {
     public static final String[] BLOOD_TYPES = {"O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"};
@@ -103,7 +103,7 @@ public class QatraDatabase implements Serializable {
         }
     }
 
-    /** Called from MainActivity.onPause (not after every tap, which made the app laggy). */
+    /** Called from MainActivity.onPause. */
     public void save() {
         if (file == null) return;
         try (DataOutputStream raw = new DataOutputStream(new FileOutputStream(file))) {

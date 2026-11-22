@@ -16,7 +16,6 @@ public class Donation implements Serializable {
         this.bloodType = bloodType;
     }
 
-    /** Saves this donation to the donor's history. */
     public void record(Donor donor) {
         donor.addDonation(this);
     }

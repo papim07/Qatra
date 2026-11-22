@@ -10,7 +10,7 @@ public class Alert implements Serializable {
     public static final String NOT_ACCEPTED = "Not accepted";
 
     private String bloodType;
-    private String location;        // where to donate
+    private String location;
     private String bookingLink;
     private String channel;         // Push or SMS
     private Appeal appeal;

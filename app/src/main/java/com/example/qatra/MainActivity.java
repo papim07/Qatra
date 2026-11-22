@@ -17,7 +17,6 @@ import java.util.ArrayList;
  */
 public class MainActivity extends AppCompatActivity {
 
-    // shared with the screen classes
     QatraDatabase db;
     Ui ui;
     User me;                              // logged-in user, null = logged out
@@ -41,7 +40,6 @@ public class MainActivity extends AppCompatActivity {
         showLogin();
     }
 
-    /** Creates the modules (control classes) and screens (boundary classes). */
     private void setUp(QatraDatabase database) {
         db = database;
         eligibility = new EligibilityModule(db);
@@ -54,7 +52,7 @@ public class MainActivity extends AppCompatActivity {
         appealScreen = new AppealReviewScreen(this);
     }
 
-    /** Save only when the app goes to the background: keeps every tap fast. */
+    /** Saves when the app goes to the background. */
     @Override
     protected void onPause() {
         super.onPause();
@@ -397,7 +395,7 @@ public class MainActivity extends AppCompatActivity {
         ui.spacer();
     }
 
-    /** FR-23 / NFR-7: AI model results, MAE vs baseline, and retraining. */
+    /** FR-23 / NFR-7: AI model results, MAE vs baseline. */
     void showModel() {
         startScreen(this::showModel, false);
         if (db.getModels().isEmpty()) forecasting.updateModel();

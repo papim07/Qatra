@@ -18,7 +18,6 @@ public class User implements Serializable {
         this.passwordHash = PasswordHasher.hash(salt, password);
     }
 
-    /** Returns true if the user id and password match this account. */
     public boolean logIn(String userId, String password) {
         return this.userId.equalsIgnoreCase(userId.trim())
                 && PasswordHasher.hash(salt, password).equals(passwordHash);
