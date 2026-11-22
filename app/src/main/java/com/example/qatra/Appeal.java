@@ -3,7 +3,6 @@ package com.example.qatra;
 import java.io.Serializable;
 import java.util.ArrayList;
 
-/** <<entity>> Appeal: prepared by MatchingModule, reviewed by staff, generates 0..* Alert. */
 public class Appeal implements Serializable {
     public static final String PENDING = "Pending";
     public static final String APPROVED = "Approved";
@@ -11,7 +10,7 @@ public class Appeal implements Serializable {
 
     private int appealId;
     private String bloodType;
-    private String urgency;          // Normal / High / Critical
+    private String urgency;
     private String status = PENDING;
     private int unitsNeeded;
     private ArrayList<Donor> recipients = new ArrayList<>();
@@ -38,7 +37,6 @@ public class Appeal implements Serializable {
         rejectReason = reason;
     }
 
-    /** Used when the Notification Service is unavailable (UC-7 extension 5a). */
     public void markPending() { status = PENDING; }
 
     public String logAppeal() {
@@ -46,7 +44,6 @@ public class Appeal implements Serializable {
                 + ", " + getDonorCount() + " donors";
     }
 
-    /** Derived attribute /donorCount. */
     public int getDonorCount() { return recipients.size(); }
 
     public int getAppealId() { return appealId; }

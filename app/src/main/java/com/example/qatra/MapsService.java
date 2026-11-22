@@ -2,13 +2,7 @@ package com.example.qatra;
 
 import java.util.LinkedHashMap;
 
-/**
- * <<boundary>> MapsService (external system, simulated).
- * Gives the distance in km from a donor's area to the blood bank.
- */
 public class MapsService {
-
-    // area -> distance from the Abu Dhabi blood bank (km)
     private static final LinkedHashMap<String, Integer> DISTANCES = new LinkedHashMap<>();
     static {
         DISTANCES.put("Abu Dhabi - Al Reem", 5);

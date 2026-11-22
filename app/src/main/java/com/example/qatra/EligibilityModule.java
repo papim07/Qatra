@@ -2,13 +2,12 @@ package com.example.qatra;
 
 import java.util.ArrayList;
 
-/** <<control>> EligibilityModule (F1): decides if and when a donor can donate (UC-2). */
 public class EligibilityModule {
     public static final String ELIGIBLE = "Eligible";
     public static final String NOT_YET = "Not yet eligible";
     public static final String UNDER_AGE = "Under minimum age";
     public static final String ERROR = "Rules unavailable";
-    public static final int MIN_AGE = 18;          // FR-1: donors must be 18+
+    public static final int MIN_AGE = 18;
 
     private final QatraDatabase db;
 
@@ -16,11 +15,6 @@ public class EligibilityModule {
         this.db = db;
     }
 
-    /**
-     * Sequence diagram "Check Eligibility":
-     * listDonationsAndDeferrals -> loadCurrentRules -> calculateNextDate -> updateEligibility.
-     * Also used for FR-4 after staff record a donation or deferral.
-     */
     @SuppressWarnings("unchecked")
     public String checkEligibility(String donorId) {
         Donor donor = db.findDonor(donorId);
@@ -31,7 +25,7 @@ public class EligibilityModule {
         ArrayList<Deferral> deferrals = (ArrayList<Deferral>) lists[1];
 
         EligibilityRule rules = EligibilityRule.loadCurrentRules(db.getRules(), "Whole blood");
-        if (rules == null) {                                  // extension 3a
+        if (rules == null) {
             db.log("system", "Eligibility rules could not be loaded");
             return ERROR;
         }
@@ -47,7 +41,6 @@ public class EligibilityModule {
         return status;
     }
 
-    /** DR-1: last donation + recovery interval, or the end of the latest deferral. */
     public long calculateNextDate(ArrayList<Donation> donations, ArrayList<Deferral> deferrals,
                                   EligibilityRule rules) {
         long next = 0;
@@ -60,7 +53,6 @@ public class EligibilityModule {
         return next;
     }
 
-    /** Extension 2a: health questions for a donor with no history, then back to step 3. */
     public boolean recordHealthAnswers(String donorId, boolean[] answers) {
         Donor donor = db.findDonor(donorId);
         boolean ok = donor.answerHealthQuestions(answers);

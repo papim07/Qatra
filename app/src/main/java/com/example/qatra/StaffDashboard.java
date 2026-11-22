@@ -4,10 +4,6 @@ import android.widget.LinearLayout;
 
 import java.util.ArrayList;
 
-/**
- * <<boundary>> StaffDashboard (UC-6 Monitor Shortages).
- * Follows the "Monitor Shortages" sequence diagram.
- */
 public class StaffDashboard {
     private final MainActivity app;
     private String selectedBloodType;
@@ -16,7 +12,6 @@ public class StaffDashboard {
         this.app = app;
     }
 
-    /** openDashboard() -> getForecasts() -> displayForecasts(forecasts) */
     public void openDashboard() {
         app.startScreen(this::openDashboard, true);
         Ui ui = app.ui;
@@ -54,7 +49,7 @@ public class StaffDashboard {
             card.addView(ui.text(whenText(f), 14, true, f.getRiskLevel().equals("Low") ? Ui.GREEN : Ui.RED));
             if (f.isThresholdBased()) card.addView(ui.badge("threshold-based", Ui.GRAY));
             if (f.getUnitsNeeded() > 0) card.addView(ui.text("Units needed: " + f.getUnitsNeeded(), 14, false, Ui.BLACK));
-            if (f.getForecastDate() < QatraDatabase.today()) {          // UC-6 extension 2b
+            if (f.getForecastDate() < QatraDatabase.today()) {
                 card.addView(ui.pill("Last forecast from " + QatraDatabase.formatDay(f.getForecastDate()), Ui.ORANGE));
             }
             card.addView(ui.text("Tap for details ›", 12, false, Ui.GRAY));
@@ -62,7 +57,6 @@ public class StaffDashboard {
         }
     }
 
-    /** selectBloodType(bloodType) -> getForecastDetails(bloodType) -> displayDetails(...) */
     public void selectBloodType(String bloodType) {
         selectedBloodType = bloodType;
         app.startScreen(() -> selectBloodType(bloodType), false);

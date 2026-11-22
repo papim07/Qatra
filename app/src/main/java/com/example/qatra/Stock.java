@@ -3,15 +3,14 @@ package com.example.qatra;
 import java.io.Serializable;
 import java.util.ArrayList;
 
-/** <<entity>> Stock: one daily stock record for one blood type (FR-7). */
 public class Stock implements Serializable {
     private String bloodType;
-    private long recordDate;       // day number
+    private long recordDate;
     private int unitsInStock;
     private int unitsUsed;
     private int unitsDonated;
-    private int unitsExpiring;     // units that expire on expiryDate
-    private long expiryDate;       // nearest expiry date of units in stock
+    private int unitsExpiring;
+    private long expiryDate;
 
     public Stock(String bloodType, long recordDate, int unitsInStock, int unitsUsed,
                  int unitsDonated, int unitsExpiring, long expiryDate) {
@@ -24,7 +23,6 @@ public class Stock implements Serializable {
         this.expiryDate = expiryDate;
     }
 
-    /** The latest record for a blood type, or null. */
     public static Stock currentLevel(ArrayList<Stock> records, String bloodType) {
         Stock latest = null;
         for (Stock s : records) {

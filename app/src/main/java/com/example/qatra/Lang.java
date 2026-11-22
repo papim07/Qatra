@@ -2,7 +2,6 @@ package com.example.qatra;
 
 import java.util.HashMap;
 
-/** Arabic / English switch (NFR-14). Text not in the map stays in English. */
 public class Lang {
     private static boolean arabic = false;
     private static final HashMap<String, String> AR = new HashMap<>();

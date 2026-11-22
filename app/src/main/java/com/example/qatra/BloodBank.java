@@ -3,15 +3,10 @@ package com.example.qatra;
 import java.io.Serializable;
 import java.util.ArrayList;
 
-/**
- * <<entity>> BloodBank: holds 0..* Stock records.
- * safeStockLevel is the number of days of supply the bank wants to keep for every blood type.
- * safeLevelFor(bloodType) turns it into units using that type's average daily usage.
- */
 public class BloodBank implements Serializable {
     private String name;
     private String location;
-    private int safeStockLevel;          // days of supply to keep
+    private int safeStockLevel;
     private ArrayList<Stock> stockRecords = new ArrayList<>();
 
     public BloodBank(String name, String location, int safeStockLevel) {
@@ -20,7 +15,6 @@ public class BloodBank implements Serializable {
         this.safeStockLevel = safeStockLevel;
     }
 
-    /** Safe level in units = days of supply × average daily usage (last 28 days). */
     public int safeLevelFor(String bloodType) {
         ArrayList<Stock> history = history(bloodType);
         if (history.isEmpty()) return 1;
@@ -35,7 +29,6 @@ public class BloodBank implements Serializable {
 
     public Stock currentLevel(String bloodType) { return Stock.currentLevel(stockRecords, bloodType); }
 
-    /** All records for one blood type, oldest first. */
     public ArrayList<Stock> history(String bloodType) {
         ArrayList<Stock> list = new ArrayList<>();
         for (Stock s : stockRecords) if (s.getBloodType().equals(bloodType)) list.add(s);

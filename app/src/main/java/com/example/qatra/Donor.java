@@ -5,15 +5,14 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.TimeZone;
 
-/** <<entity>> Donor (a User). Has 0..* Deferral and makes 0..* Donation. */
 public class Donor extends User {
-    private long dateOfBirth;           // day number (days since 1 Jan 1970)
+    private long dateOfBirth;
     private String bloodType;
-    private String location;            // area, e.g. "Abu Dhabi - Al Reem"
-    private String contactPreference;   // "Push" or "SMS"
+    private String location;
+    private String contactPreference;
     private String eligibilityStatus = "Unknown";
-    private long nextEligibleDate = 0;  // day number
-    private boolean healthChecked;      // UC-2 extension 2a answered
+    private long nextEligibleDate = 0;
+    private boolean healthChecked;
     private ArrayList<Donation> donations = new ArrayList<>();
     private ArrayList<Deferral> deferrals = new ArrayList<>();
 
@@ -29,10 +28,6 @@ public class Donor extends User {
     @Override
     public String getRole() { return "donor"; }
 
-    /**
-     * Sequence diagram "Check Eligibility": returns {donations, deferrals}.
-     * Index 0 = ArrayList of Donation, index 1 = ArrayList of Deferral.
-     */
     public Object[] listDonationsAndDeferrals() {
         return new Object[]{donations, deferrals};
     }
@@ -50,7 +45,6 @@ public class Donor extends User {
         this.nextEligibleDate = nextDate;
     }
 
-    /** Returns true if every health answer is OK. */
     public boolean answerHealthQuestions(boolean[] answers) {
         healthChecked = true;
         for (boolean a : answers) if (!a) return false;
@@ -64,7 +58,6 @@ public class Donor extends User {
 
     public void addDeferral(Deferral d) { deferrals.add(d); }
 
-    /** The deferral that ends last, or null. */
     public Deferral latestDeferral() {
         Deferral latest = null;
         for (Deferral d : deferrals) {
@@ -85,7 +78,6 @@ public class Donor extends User {
         this.contactPreference = contactPreference;
     }
 
-    /** Age in whole years on the given day. */
     public int getAge(long today) {
         return yearsBetween(dateOfBirth, today);
     }

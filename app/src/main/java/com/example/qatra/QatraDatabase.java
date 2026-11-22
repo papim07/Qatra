@@ -29,10 +29,6 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.GCMParameterSpec;
 
-/**
- * Storage for all entities (stands in for the PostgreSQL database).
- * Saved to an encrypted file when the app goes to the background.
- */
 public class QatraDatabase implements Serializable {
     public static final String[] BLOOD_TYPES = {"O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"};
     private static final String FILE_NAME = "qatra_v6.dat";
@@ -40,18 +36,16 @@ public class QatraDatabase implements Serializable {
     private static QatraDatabase instance;
     private transient File file;
 
-    private BloodBank bank = new BloodBank("Abu Dhabi Blood Bank", "Abu Dhabi - Al Reem", 5);   // keep 5 days of supply
+    private BloodBank bank = new BloodBank("Abu Dhabi Blood Bank", "Abu Dhabi - Al Reem", 5);
     private ArrayList<User> users = new ArrayList<>();
     private ArrayList<EligibilityRule> rules = new ArrayList<>();
     private ArrayList<Appeal> appeals = new ArrayList<>();
     private ArrayList<Alert> alerts = new ArrayList<>();
     private ArrayList<Forecast> forecasts = new ArrayList<>();
     private ArrayList<String> auditLog = new ArrayList<>();
-    private HashMap<String, double[]> models = new HashMap<>();   // AI model weights + MAE per blood type
+    private HashMap<String, double[]> models = new HashMap<>();
     private long modelTrainedDay = -1;
     private int nextAppealId = 1;
-
-    // ================= loading & saving =================
 
     public static QatraDatabase get(Context c) {
         if (instance == null) {
@@ -66,14 +60,12 @@ public class QatraDatabase implements Serializable {
         return instance;
     }
 
-    /** Database with sample data and no file: used by the unit tests. */
     static QatraDatabase createForTesting() {
         QatraDatabase db = new QatraDatabase();
         db.loadSampleData();
         return db;
     }
 
-    // NFR-8: data at rest is encrypted with AES-GCM; the key is kept in the Android Keystore.
     private static final String KEY_ALIAS = "qatra_data_key";
 
     private static SecretKey getKey() throws Exception {
@@ -99,11 +91,10 @@ public class QatraDatabase implements Serializable {
             ObjectInputStream in = new ObjectInputStream(new CipherInputStream(raw, cipher));
             return (QatraDatabase) in.readObject();
         } catch (Exception e) {
-            return null;   // missing, old or unreadable file -> start with sample data
+            return null;
         }
     }
 
-    /** Called from MainActivity.onPause. */
     public void save() {
         if (file == null) return;
         try (DataOutputStream raw = new DataOutputStream(new FileOutputStream(file))) {
@@ -126,8 +117,6 @@ public class QatraDatabase implements Serializable {
         return get(c);
     }
 
-    // ================= helpers =================
-
     public static long today() {
         return System.currentTimeMillis() / 86400000L;
     }
@@ -140,15 +129,12 @@ public class QatraDatabase implements Serializable {
         return Calendar.getInstance().get(Calendar.YEAR);
     }
 
-    /** FR-20, NFR-11: who did what and when. */
     public void log(String who, String action) {
         String time = new SimpleDateFormat("dd MMM HH:mm", Locale.US).format(new Date());
         auditLog.add(time + "  •  " + who + "  •  " + action);
     }
 
     public int nextAppealId() { return nextAppealId++; }
-
-    // ================= users =================
 
     public User login(String userId, String password) {
         for (User u : users) {
@@ -170,7 +156,6 @@ public class QatraDatabase implements Serializable {
         return u instanceof Donor ? (Donor) u : null;
     }
 
-    /** Parses dd/MM/yyyy into a day number, or -1 if not a valid date. */
     public static long parseDate(String text) {
         try {
             SimpleDateFormat f = new SimpleDateFormat("dd/MM/yyyy", Locale.US);
@@ -182,7 +167,6 @@ public class QatraDatabase implements Serializable {
         }
     }
 
-    /** FR-20: applies a changed rule straight away and logs who did it and when. */
     public void applyRule(EligibilityRule changed, String by) {
         EligibilityRule current = EligibilityRule.loadCurrentRules(rules, changed.getDonationType());
         current.setRecoveryIntervalDays(changed.getRecoveryIntervalDays());
@@ -196,7 +180,6 @@ public class QatraDatabase implements Serializable {
         return list;
     }
 
-    /** FR-1 + FR-24. Returns an error message, or null if the account was created. */
     public String registerDonor(String name, String contact, String dobText, String bloodType,
                                 String location, String preference, String userId, String password,
                                 boolean consent) {
@@ -217,7 +200,6 @@ public class QatraDatabase implements Serializable {
         return null;
     }
 
-    /** UC-9: administrator adds a staff account. */
     public String addStaff(String userId, String name, String password, String by) {
         if (userId.trim().isEmpty() || name.trim().isEmpty() || password.length() < 4)
             return "Fill in all fields (password 4+ characters)";
@@ -233,8 +215,6 @@ public class QatraDatabase implements Serializable {
         log(d.getUserId(), "Updated profile");
         return null;
     }
-
-    // ================= stock (UC-4, FR-7) =================
 
     public String enterStock(String type, String unitsText, String usedText, String donatedText,
                              String expiringText, String by) {
@@ -254,8 +234,6 @@ public class QatraDatabase implements Serializable {
         log(by, "Entered " + type + " stock: " + units + " units");
         return null;
     }
-
-    // ================= alerts, booking, visits =================
 
     public boolean hasOpenAlert(Donor d) {
         for (Alert a : alerts) if (a.getDonor() == d && a.isOpen()) return true;
@@ -285,7 +263,6 @@ public class QatraDatabase implements Serializable {
         log(a.getDonor().getUserId(), "Booked " + formatDay(date) + " " + time);
     }
 
-    /** UC-5 / FR-6: staff confirm and record the donation. */
     public void recordDonation(Alert a, String by) {
         Donor d = a.getDonor();
         new Donation(today(), bank.getName(), "Whole blood", d.getBloodType()).record(d);
@@ -295,14 +272,12 @@ public class QatraDatabase implements Serializable {
         log(by, "Confirmed and recorded donation for " + d.getUserId());
     }
 
-    /** FR-25: medical staff do not accept the donor. */
     public void rejectAtVisit(Alert a, String reason, int days, String by) {
         a.getDonor().addDeferral(new Deferral(reason, today() + days));
         a.setStatus(Alert.NOT_ACCEPTED);
         log(by, "Did not accept " + a.getDonor().getUserId() + ": " + reason);
     }
 
-    /** FR-19: {contacted, booked, donated, still needed}. */
     public int[] appealResponse(Appeal ap) {
         int contacted = 0, booked = 0, donated = 0;
         for (Alert a : alertsFor(ap)) {
@@ -324,8 +299,6 @@ public class QatraDatabase implements Serializable {
         for (Appeal a : appeals) if (a.getAppealId() == id) return a;
         return null;
     }
-
-    // ================= FR-22 anonymised report =================
 
     public ArrayList<String> supplyReport(int days) {
         ArrayList<String> lines = new ArrayList<>();
@@ -355,8 +328,6 @@ public class QatraDatabase implements Serializable {
         return lines;
     }
 
-    // ================= getters =================
-
     public BloodBank getBank() { return bank; }
     public ArrayList<User> getUsers() { return users; }
     public ArrayList<EligibilityRule> getRules() { return rules; }
@@ -367,8 +338,6 @@ public class QatraDatabase implements Serializable {
     public HashMap<String, double[]> getModels() { return models; }
     public long getModelTrainedDay() { return modelTrainedDay; }
     public void setModelTrainedDay(long day) { modelTrainedDay = day; }
-
-    // ================= synthetic sample data =================
 
     private void loadSampleData() {
         Random r = new Random(42);
@@ -393,11 +362,10 @@ public class QatraDatabase implements Serializable {
             String place = places[r.nextInt(places.length)];
             long last = (r.nextInt(6) == 0) ? -1 : now - (10 + r.nextInt(190));
 
-            // fixed donors so the demo always works
-            if (i == 0) { type = "O-"; place = "Abu Dhabi - Al Reem"; last = now - 100; }   // eligible
-            if (i == 1) { type = "O-"; place = "Abu Dhabi - Khalifa City"; last = -1; }    // new donor
-            if (i == 2) { type = "A-"; place = "Abu Dhabi - Al Reem"; last = now - 20; }    // must wait
-            if (i == 3) { type = "O-"; place = "Abu Dhabi - Al Shamkha"; last = now - 90; } // needs wider search
+            if (i == 0) { type = "O-"; place = "Abu Dhabi - Al Reem"; last = now - 100; }
+            if (i == 1) { type = "O-"; place = "Abu Dhabi - Khalifa City"; last = -1; }
+            if (i == 2) { type = "A-"; place = "Abu Dhabi - Al Reem"; last = now - 20; }
+            if (i == 3) { type = "O-"; place = "Abu Dhabi - Al Shamkha"; last = now - 90; }
 
             Donor d = new Donor(names[i].split(" ")[0].toLowerCase(), names[i],
                     "05" + (10000000 + r.nextInt(89999999)), "1234", now - 365L * (20 + r.nextInt(35)) - r.nextInt(365), type, place,
@@ -410,26 +378,23 @@ public class QatraDatabase implements Serializable {
             users.add(d);
         }
 
-        // units now, safe level, used/day, donated/day, expiring soon, days of history
         int[][] cfg = {
-            {120, 80, 14, 13, 6, 60},   // O+
-            {28, 25, 5, 3, 4, 60},      // O-  -> High
-            {90, 60, 10, 10, 5, 60},    // A+
-            {30, 20, 4, 3, 3, 60},      // A-  -> Medium
-            {70, 45, 7, 7, 2, 60},      // B+
-            {18, 12, 2, 2, 1, 60},      // B-
-            {35, 20, 3, 3, 1, 60},      // AB+
-            {9, 8, 1, 1, 0, 7}          // AB- -> threshold-based
+            {120, 80, 14, 13, 6, 60},
+            {28, 25, 5, 3, 4, 60},
+            {90, 60, 10, 10, 5, 60},
+            {30, 20, 4, 3, 3, 60},
+            {70, 45, 7, 7, 2, 60},
+            {18, 12, 2, 2, 1, 60},
+            {35, 20, 3, 3, 1, 60},
+            {9, 8, 1, 1, 0, 7}
         };
         for (int i = 0; i < BLOOD_TYPES.length; i++) {
             int[] c = cfg[i];
             int n = c[5];
             for (int day = n - 1; day >= 0; day--) {
                 long date = now - day;
-                int k = n - 1 - day;                                   // 0 = oldest day
+                int k = n - 1 - day;
                 boolean weekend = ForecastingModule.isWeekend(date);
-                // realistic patterns for the AI to learn: usage rises over the period
-                // (0.8x -> 1.2x) and is lower at weekends; donations are higher at weekends
                 double trend = n > 1 ? 0.8 + 0.4 * k / (n - 1) : 1.0;
                 int used = (int) Math.max(0, Math.round(c[2] * trend * (weekend ? 0.6 : 1.1) + r.nextInt(3) - 1));
                 int donated = (int) Math.max(0, Math.round(c[3] * (weekend ? 1.3 : 0.9) + r.nextInt(3) - 1));

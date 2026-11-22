@@ -3,21 +3,15 @@ package com.example.qatra;
 import java.util.Calendar;
 import java.util.TimeZone;
 
-/**
- * Calendar factors that lower donations (FR-8): Ramadan, holidays, school breaks, summer.
- * Dates are approximate (UAE, 2026-2027).
- */
 public class SeasonCalendar {
-
-    // {start, end} as yyyymmdd
     private static final int[][] RAMADAN = {{20260218, 20260319}, {20270208, 20270309}};
     private static final int[][] HOLIDAYS = {
-        {20260320, 20260322},   // Eid al-Fitr
-        {20260526, 20260529},   // Eid al-Adha
-        {20261202, 20261203},   // National Day
-        {20270101, 20270101},   // New Year
-        {20270310, 20270312},   // Eid al-Fitr
-        {20270515, 20270518}    // Eid al-Adha
+        {20260320, 20260322},
+        {20260526, 20260529},
+        {20261202, 20261203},
+        {20270101, 20270101},
+        {20270310, 20270312},
+        {20270515, 20270518}
     };
 
     private static int toDate(long day) {
@@ -33,7 +27,6 @@ public class SeasonCalendar {
         return false;
     }
 
-    /** Name of the season on that day, or null for a normal day. */
     public static String seasonName(long day) {
         int date = toDate(day);
         int mmdd = date % 10000;
@@ -44,7 +37,6 @@ public class SeasonCalendar {
         return null;
     }
 
-    /** How much donations drop: 1.0 = normal. */
     public static double donationFactor(long day) {
         String s = seasonName(day);
         if (s == null) return 1.0;
@@ -52,7 +44,7 @@ public class SeasonCalendar {
             case "Ramadan": return 0.6;
             case "Public holiday": return 0.7;
             case "Summer": return 0.75;
-            default: return 0.85;   // school break
+            default: return 0.85;
         }
     }
 }

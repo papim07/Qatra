@@ -3,10 +3,6 @@ package com.example.qatra;
 import android.widget.CheckBox;
 import android.widget.LinearLayout;
 
-/**
- * <<boundary>> EligibilityScreen: the donor's home screen (UC-2, plus requests for UC-3).
- * Follows the "Check Eligibility" sequence diagram.
- */
 public class EligibilityScreen {
     private final MainActivity app;
     private String donorId;
@@ -60,7 +56,6 @@ public class EligibilityScreen {
         card.addView(ui.text("Final check is done by medical staff when you arrive.", 12, false, Ui.GRAY));
     }
 
-    /** Extension 2a: no donation history. */
     public void askHealthQuestions() {
         Ui ui = app.ui;
         LinearLayout q = ui.card();
@@ -101,7 +96,7 @@ public class EligibilityScreen {
                 req.addView(ui.pill("📅  " + QatraDatabase.formatDay(a.getAppointmentDate()) + "  "
                         + a.getAppointmentTime() + "\n📍  " + a.getLocation(), Ui.BLUE));
                 long daysLeft = a.getAppointmentDate() - today;
-                if (daysLeft >= 0 && daysLeft <= 1) {                       // FR-18 reminder
+                if (daysLeft >= 0 && daysLeft <= 1) {
                     req.addView(ui.pill("🔔  Reminder: your appointment is "
                             + (daysLeft == 0 ? "today" : "tomorrow") + " at " + a.getAppointmentTime(), Ui.ORANGE));
                 }

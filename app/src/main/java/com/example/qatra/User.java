@@ -2,13 +2,12 @@ package com.example.qatra;
 
 import java.io.Serializable;
 
-/** <<entity>> User: general class of Donor, BloodBankStaff and Administrator. */
 public class User implements Serializable {
-    private String userId;          // login name
+    private String userId;
     private String name;
     private String contact;
     private String salt;
-    private String passwordHash;    // never the plain password (NFR-9)
+    private String passwordHash;
 
     public User(String userId, String name, String contact, String password) {
         this.userId = userId;
@@ -24,10 +23,8 @@ public class User implements Serializable {
     }
 
     public void logOut() {
-        // nothing stored per session; MainActivity forgets the current user
     }
 
-    /** "donor", "staff" or "admin" (NFR-10). Each subclass overrides this. */
     public String getRole() { return "user"; }
 
     public String getUserId() { return userId; }

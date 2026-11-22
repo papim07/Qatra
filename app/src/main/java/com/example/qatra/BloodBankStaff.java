@@ -1,8 +1,7 @@
 package com.example.qatra;
 
-/** <<entity>> BloodBankStaff (a User). Reviews 0..* Appeal. */
 public class BloodBankStaff extends User {
-    private String staffRole;   // e.g. "Blood bank officer", "Nurse"
+    private String staffRole;
 
     public BloodBankStaff(String userId, String name, String contact, String password, String staffRole) {
         super(userId, name, contact, password);
@@ -12,7 +11,6 @@ public class BloodBankStaff extends User {
     @Override
     public String getRole() { return "staff"; }
 
-    /** Staff can only decide on appeals that are still pending (FR-15). */
     public boolean reviewAppeal(Appeal appeal) {
         return appeal.getStatus().equals(Appeal.PENDING);
     }

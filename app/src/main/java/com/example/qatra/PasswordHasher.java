@@ -3,9 +3,7 @@ package com.example.qatra;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
 
-/** Hashes passwords with SHA-256 and a random salt (NFR-9). */
 public class PasswordHasher {
-
     public static String newSalt() {
         byte[] bytes = new byte[16];
         new SecureRandom().nextBytes(bytes);

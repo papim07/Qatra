@@ -10,16 +10,10 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import java.util.ArrayList;
 
-/**
- * Starts the app, creates the control modules, and handles navigation.
- * The main boundary classes from the class diagram are EligibilityScreen,
- * StaffDashboard and AppealReviewScreen; the smaller screens are below.
- */
 public class MainActivity extends AppCompatActivity {
-
     QatraDatabase db;
     Ui ui;
-    User me;                              // logged-in user, null = logged out
+    User me;
     EligibilityModule eligibility;
     MatchingModule matching;
     ForecastingModule forecasting;
@@ -28,7 +22,7 @@ public class MainActivity extends AppCompatActivity {
     StaffDashboard dashboard;
     AppealReviewScreen appealScreen;
 
-    private Runnable current;             // redraws the current screen
+    private Runnable current;
     private boolean atHome = true;
 
     @Override
@@ -45,14 +39,13 @@ public class MainActivity extends AppCompatActivity {
         eligibility = new EligibilityModule(db);
         matching = new MatchingModule(db, eligibility, new MapsService(), new NotificationService(db));
         forecasting = new ForecastingModule(db);
-        forecasting.setMatching(matching);      // Forecast triggers Appeal (FR-15)
+        forecasting.setMatching(matching);
         inventory = new InventorySystem(db);
         eligibilityScreen = new EligibilityScreen(this);
         dashboard = new StaffDashboard(this);
         appealScreen = new AppealReviewScreen(this);
     }
 
-    /** Saves when the app goes to the background. */
     @Override
     protected void onPause() {
         super.onPause();
@@ -65,8 +58,6 @@ public class MainActivity extends AppCompatActivity {
         else if (me == null) showLogin();
         else showHome();
     }
-
-    // ================= navigation helpers =================
 
     void startScreen(Runnable redraw, boolean home) {
         current = redraw;
@@ -96,8 +87,6 @@ public class MainActivity extends AppCompatActivity {
         me = null;
         showLogin();
     }
-
-    // ================= login & register (FR-1, FR-24) =================
 
     void showLogin() {
         startScreen(this::showLogin, true);
@@ -175,9 +164,6 @@ public class MainActivity extends AppCompatActivity {
         ui.spacer();
     }
 
-    // ================= donor screens (UC-1, UC-3) =================
-
-    /** FR-17: pick a slot, then see date, time and place. */
     void showBooking(Alert a) {
         startScreen(() -> showBooking(a), false);
         header("Book appointment", a.getBloodType() + " appeal", true);
@@ -205,7 +191,6 @@ public class MainActivity extends AppCompatActivity {
         }));
     }
 
-    /** FR-2. */
     void showProfile() {
         startScreen(this::showProfile, false);
         Donor d = (Donor) me;
@@ -223,7 +208,6 @@ public class MainActivity extends AppCompatActivity {
         }));
     }
 
-    /** FR-3: newest first. */
     void showHistory() {
         startScreen(this::showHistory, false);
         Donor d = (Donor) me;
@@ -239,9 +223,6 @@ public class MainActivity extends AppCompatActivity {
         ui.spacer();
     }
 
-    // ================= staff screens (UC-4, UC-5) =================
-
-    /** UC-4 / FR-7: enter or import stock data. */
     void showStockForm() {
         startScreen(this::showStockForm, false);
         header("Update stock", "Enter today's numbers or import them", true);
@@ -281,11 +262,10 @@ public class MainActivity extends AppCompatActivity {
         ui.spacer();
     }
 
-    /** UC-5 / FR-6 / FR-25: provisional eligibility, then staff confirm or reject. */
     void showVisit(Alert a) {
         startScreen(() -> showVisit(a), false);
         Donor d = a.getDonor();
-        db.log(who(), "Viewed donor record " + d.getUserId());   // NFR-11
+        db.log(who(), "Viewed donor record " + d.getUserId());
         header("Donor visit", d.getName(), true);
 
         LinearLayout card = ui.card();
@@ -301,7 +281,7 @@ public class MainActivity extends AppCompatActivity {
         LinearLayout decide = ui.card();
         decide.addView(ui.button("Confirm & record donation", Ui.GREEN, v -> {
             db.recordDonation(a, who());
-            eligibility.checkEligibility(d.getUserId());            // FR-4
+            eligibility.checkEligibility(d.getUserId());
             ui.toast("Donation recorded, stock +1");
             showHome();
         }));
@@ -314,14 +294,12 @@ public class MainActivity extends AppCompatActivity {
             catch (NumberFormatException e) { n = -1; }
             if (r.isEmpty() || n < 1) { ui.toast("Enter a reason and number of days"); return; }
             db.rejectAtVisit(a, r, n, who());
-            eligibility.checkEligibility(d.getUserId());            // FR-4
+            eligibility.checkEligibility(d.getUserId());
             ui.toast("Decision recorded");
             showHome();
         }));
         ui.spacer();
     }
-
-    // ================= admin screens (UC-9) =================
 
     private void showAdminHome() {
         startScreen(this::showAdminHome, true);
@@ -378,7 +356,6 @@ public class MainActivity extends AppCompatActivity {
         ui.spacer();
     }
 
-    /** FR-22: anonymised statistics only. */
     private void showReport(int days) {
         startScreen(() -> showReport(days), false);
         header("Supply report", "Last " + days + " days  •  anonymised", true);
@@ -395,7 +372,6 @@ public class MainActivity extends AppCompatActivity {
         ui.spacer();
     }
 
-    /** FR-23 / NFR-7: AI model results, MAE vs baseline. */
     void showModel() {
         startScreen(this::showModel, false);
         if (db.getModels().isEmpty()) forecasting.updateModel();

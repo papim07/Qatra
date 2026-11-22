@@ -21,7 +21,6 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-/** Helpers that build the views in code (no XML). */
 public class Ui {
     public static final int RED = Color.parseColor("#D32F2F");
     public static final int DARK_RED = Color.parseColor("#8E0000");
@@ -33,7 +32,7 @@ public class Ui {
     public static final int BLACK = Color.parseColor("#212121");
     public static final int BG = Color.parseColor("#FAF6F6");
 
-    private static float scale = 1f;   // large text option (NFR-16)
+    private static float scale = 1f;
 
     private final Activity act;
     private final ScrollView scroll;
@@ -54,7 +53,6 @@ public class Ui {
 
     public static void toggleLargeText() { scale = (scale == 1f) ? 1.25f : 1f; }
 
-    /** Empties the page and fades the new screen in. */
     public void clear() {
         page.removeAllViews();
         page.setLayoutDirection(Lang.isArabic() ? View.LAYOUT_DIRECTION_RTL : View.LAYOUT_DIRECTION_LTR);
@@ -76,12 +74,9 @@ public class Ui {
         return g;
     }
 
-    /** Background with a touch ripple. */
     public Drawable pressable(int color, int radius) {
         return new RippleDrawable(ColorStateList.valueOf(Color.argb(40, 0, 0, 0)), rounded(color, radius), null);
     }
-
-    // ---------- text ----------
 
     public TextView text(String s, int size, boolean bold, int color) {
         TextView t = new TextView(act);
@@ -110,14 +105,12 @@ public class Ui {
         page.addView(new View(act), new LinearLayout.LayoutParams(-1, dp(40)));
     }
 
-    // ---------- headers ----------
-
     private LinearLayout headerBox(int bottomPadding) {
         LinearLayout h = new LinearLayout(act);
         h.setOrientation(LinearLayout.VERTICAL);
         GradientDrawable g = new GradientDrawable(GradientDrawable.Orientation.TL_BR, new int[]{RED, DARK_RED});
         float r = dp(28);
-        g.setCornerRadii(new float[]{0, 0, 0, 0, r, r, r, r});   // rounded bottom corners
+        g.setCornerRadii(new float[]{0, 0, 0, 0, r, r, r, r});
         h.setBackground(g);
         h.setPadding(dp(22), dp(12), dp(22), dp(bottomPadding));
         return h;
@@ -142,7 +135,6 @@ public class Ui {
         page.addView(h);
     }
 
-    /** Big centred header with a logo, for the login screen. */
     public void hero(Runnable onRefresh) {
         LinearLayout h = headerBox(56);
         h.addView(topBar(null, null, onRefresh), new LinearLayout.LayoutParams(-1, -2));
@@ -182,8 +174,6 @@ public class Ui {
         return t;
     }
 
-    // ---------- cards and rows ----------
-
     public LinearLayout card() {
         LinearLayout c = new LinearLayout(act);
         c.setOrientation(LinearLayout.VERTICAL);
@@ -196,7 +186,6 @@ public class Ui {
         return c;
     }
 
-    /** A card that overlaps the header (used on the login screen). */
     public LinearLayout floatingCard() {
         LinearLayout c = card();
         LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) c.getLayoutParams();
@@ -226,8 +215,6 @@ public class Ui {
         return c;
     }
 
-    // ---------- buttons, badges ----------
-
     public Button button(String label, int color, View.OnClickListener click) {
         Button b = new Button(act);
         b.setText(Lang.t(label));
@@ -244,7 +231,6 @@ public class Ui {
         return b;
     }
 
-    /** Light button with coloured text. */
     public Button softButton(String label, int color, View.OnClickListener click) {
         Button b = button(label, color, click);
         b.setTextColor(color);
@@ -252,7 +238,6 @@ public class Ui {
         return b;
     }
 
-    /** Text-only link. */
     public TextView link(String label, View.OnClickListener click) {
         TextView t = text(label, 14, true, RED);
         t.setGravity(Gravity.CENTER);
@@ -286,7 +271,6 @@ public class Ui {
         return t;
     }
 
-    /** Small tappable chip (demo accounts). */
     public TextView chip(String label, View.OnClickListener click) {
         TextView t = text(label, 13, true, RED);
         t.setBackground(new RippleDrawable(ColorStateList.valueOf(Color.argb(40, 0, 0, 0)), rounded(LIGHT, 16), null));
@@ -300,7 +284,7 @@ public class Ui {
 
     public TextView bloodDrop(String type) {
         TextView t = text(type, 16, true, Color.WHITE);
-        t.setContentDescription("Blood type " + type);   // screen readers (NFR-16)
+        t.setContentDescription("Blood type " + type);
         t.setGravity(Gravity.CENTER);
         GradientDrawable circle = new GradientDrawable(GradientDrawable.Orientation.TL_BR, new int[]{RED, DARK_RED});
         circle.setShape(GradientDrawable.OVAL);
@@ -345,8 +329,6 @@ public class Ui {
         }
         page.addView(stats);
     }
-
-    // ---------- form inputs (rounded filled boxes) ----------
 
     public void label(LinearLayout parent, String s) {
         TextView t = text(s, 13, true, GRAY);

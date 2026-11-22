@@ -2,11 +2,10 @@ package com.example.qatra;
 
 import java.io.Serializable;
 
-/** <<entity>> Donation: date, centre, type and blood type (FR-3, FR-6). */
 public class Donation implements Serializable {
-    private long donationDate;     // day number
+    private long donationDate;
     private String centre;
-    private String donationType;   // e.g. "Whole blood"
+    private String donationType;
     private String bloodType;
 
     public Donation(long donationDate, String centre, String donationType, String bloodType) {

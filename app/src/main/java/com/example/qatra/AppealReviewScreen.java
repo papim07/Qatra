@@ -5,10 +5,6 @@ import android.widget.LinearLayout;
 
 import java.util.ArrayList;
 
-/**
- * <<boundary>> AppealReviewScreen (UC-7 Send Appeal, UC-8 Widen Search Area).
- * Follows the "Send Appeal" sequence and communication diagrams.
- */
 public class AppealReviewScreen {
     private final MainActivity app;
     private int appealId = -1;
@@ -17,9 +13,8 @@ public class AppealReviewScreen {
         this.app = app;
     }
 
-    /** 1: selectAppeal(appealId) -> 2: matchDonors(appealId) -> 7: displaySummary(...) */
     public void selectAppeal(int appealId) {
-        if (appealId != this.appealId) app.matching.resetSearch();   // new appeal starts at 25 km
+        if (appealId != this.appealId) app.matching.resetSearch();
         this.appealId = appealId;
         Appeal a = app.db.findAppeal(appealId);
         app.startScreen(() -> selectAppeal(appealId), false);
@@ -49,7 +44,7 @@ public class AppealReviewScreen {
                 donorCount >= unitsNeeded ? Ui.GREEN : Ui.ORANGE));
 
         double next = app.matching.nextDistance();
-        if (donorCount < unitsNeeded && next != -1) {                // UC-8 extends UC-7
+        if (donorCount < unitsNeeded && next != -1) {
             card.addView(ui.text("Too few donors for the units needed.", 13, false, Ui.GRAY));
             card.addView(ui.softButton("Widen search to " + (int) next + " km", Ui.ORANGE, v -> {
                 app.matching.widenSearch(appealId, next);
@@ -82,12 +77,11 @@ public class AppealReviewScreen {
         ui.spacer();
     }
 
-    /** 8: approveAppeal() -> 9: sendAppeal(appealId) -> 13: displayConfirmation() */
     public void approveAppeal() {
         Appeal a = app.db.findAppeal(appealId);
         if (!((BloodBankStaff) app.me).reviewAppeal(a)) return;
         int n = app.matching.sendAppeal(appealId, app.who());
-        if (n < 0) app.ui.toast("Notification Service unavailable, appeal kept pending");   // 5a
+        if (n < 0) app.ui.toast("Notification Service unavailable, appeal kept pending");
         else app.ui.toast("Alerts sent to " + n + " donor(s)");
         selectAppeal(appealId);
     }
@@ -98,7 +92,6 @@ public class AppealReviewScreen {
         selectAppeal(appealId);
     }
 
-    /** Shows that the appeal was sent, with the response so far (FR-19). */
     public void displayConfirmation() {
         Ui ui = app.ui;
         Appeal a = app.db.findAppeal(appealId);

@@ -2,29 +2,20 @@ package com.example.qatra;
 
 import java.util.ArrayList;
 
-/**
- * <<control>> ForecastingModule (F2, the AI component): forecasts each blood type 14 days ahead (UC-6).
- *
- * AI model: a linear regression per blood type,
- *     units per day = w0 + w1 * trend + w2 * weekend
- * one for usage and one for donor turnout, trained by least squares in updateModel().
- * It is used only when it beats the average-usage baseline on test data (NFR-7).
- */
 public class ForecastingModule {
-    private static final int MIN_HISTORY = 14;   // less than this -> threshold-based (FR-11)
+    private static final int MIN_HISTORY = 14;
     private static final int MIN_TRAINING = 28;
     private static final int TEST_DAYS = 14;
-    private static final int WINDOW = 28;        // baseline = average of the last 28 days
+    private static final int WINDOW = 28;
 
-    // layout of the model array stored per blood type in QatraDatabase
-    private static final int USAGE_W = 0;        // 3 usage weights at index 0..2
-    private static final int TURNOUT_W = 3;      // 3 turnout weights at index 3..5
+    private static final int USAGE_W = 0;
+    private static final int TURNOUT_W = 3;
     private static final int MAE_MODEL = 6;
     private static final int MAE_BASELINE = 7;
 
     private int horizonDays = 14;
     private final QatraDatabase db;
-    private MatchingModule matching;             // Forecast triggers Appeal (FR-15)
+    private MatchingModule matching;
 
     public ForecastingModule(QatraDatabase db) {
         this.db = db;
@@ -32,12 +23,6 @@ public class ForecastingModule {
 
     public void setMatching(MatchingModule matching) { this.matching = matching; }
 
-    // ================= AI model (FR-23, NFR-7) =================
-
-    /**
-     * Weekly: trains a new model per blood type on all but the last 14 days, tests it on those
-     * 14 days against the baseline (MAE), and keeps the old model if the new one is worse.
-     */
     public String updateModel() {
         BloodBank bank = db.getBank();
         double sumModel = 0, sumBaseline = 0;
@@ -66,9 +51,9 @@ public class ForecastingModule {
 
             double[] old = db.getModels().get(type);
             if (old != null && old[MAE_MODEL] <= maeModel) {
-                keptOld++;                                    // FR-23: new one is worse -> keep old
+                keptOld++;
             } else {
-                double[] u = train(history, 0, n, true);       // retrain on all data
+                double[] u = train(history, 0, n, true);
                 double[] t = train(history, 0, n, false);
                 db.getModels().put(type, new double[]{u[0], u[1], u[2], t[0], t[1], t[2], maeModel, maeBaseline});
             }
@@ -88,7 +73,6 @@ public class ForecastingModule {
         return summary;
     }
 
-    /** Overall improvement over the baseline in percent (NFR-7 target: at least 15%). */
     public double overallImprovement() {
         double m = 0, b = 0;
         for (double[] model : db.getModels().values()) { m += model[MAE_MODEL]; b += model[MAE_BASELINE]; }
@@ -99,24 +83,20 @@ public class ForecastingModule {
     public double getMaeModel(String type) { return db.getModels().get(type)[MAE_MODEL]; }
     public double getMaeBaseline(String type) { return db.getModels().get(type)[MAE_BASELINE]; }
 
-    /** FR-23: the AI is used only if it beat the baseline. */
     public boolean isAIUsed(String type) {
         double[] m = db.getModels().get(type);
         return m != null && m[MAE_MODEL] < m[MAE_BASELINE];
     }
 
-    /** UAE weekend is Saturday and Sunday. Day 0 (1 Jan 1970) was a Thursday. */
     public static boolean isWeekend(long day) {
-        int dayOfWeek = (int) ((day + 4) % 7);   // 0 = Sunday ... 6 = Saturday
+        int dayOfWeek = (int) ((day + 4) % 7);
         return dayOfWeek == 0 || dayOfWeek == 6;
     }
 
-    /** Model inputs for one day: [1, trend, weekend]. index = position in the history. */
     private static double[] features(long day, int index) {
         return new double[]{1.0, index / 30.0, isWeekend(day) ? 1.0 : 0.0};
     }
 
-    /** Least squares on history[from..to-1]: solves (X^T X) w = X^T y. */
     private static double[] train(ArrayList<Stock> history, int from, int to, boolean usage) {
         double[][] xtx = new double[3][3];
         double[] xty = new double[3];
@@ -129,11 +109,10 @@ public class ForecastingModule {
                 for (int b = 0; b < 3; b++) xtx[a][b] += x[a] * x[b];
             }
         }
-        for (int a = 0; a < 3; a++) xtx[a][a] += 0.001;   // small ridge term for stability
+        for (int a = 0; a < 3; a++) xtx[a][a] += 0.001;
         return solve(xtx, xty);
     }
 
-    /** Gaussian elimination with pivoting: solves A w = b. */
     private static double[] solve(double[][] a, double[] b) {
         int n = b.length;
         for (int col = 0; col < n; col++) {
@@ -156,19 +135,15 @@ public class ForecastingModule {
         return w;
     }
 
-    /** Prediction from 3 weights starting at 'offset' in the array. */
     private static double predict(double[] w, int offset, long day, int index) {
         double[] x = features(day, index);
         double y = w[offset] * x[0] + w[offset + 1] * x[1] + w[offset + 2] * x[2];
         return Math.max(0, y);
     }
 
-    // ================= forecasting =================
-
-    /** FR-8: daily run. Makes one Forecast per blood type and keeps it with its date. */
     public void generateForecast() {
         long today = QatraDatabase.today();
-        if (db.getModelTrainedDay() < today - 7) updateModel();      // weekly retraining
+        if (db.getModelTrainedDay() < today - 7) updateModel();
 
         BloodBank bank = db.getBank();
         for (String type : QatraDatabase.BLOOD_TYPES) {
@@ -176,25 +151,19 @@ public class ForecastingModule {
             if (current == null) continue;
             Forecast f;
             if (bank.history(type).size() < MIN_HISTORY) {
-                f = applyThreshold(type);                              // FR-11
+                f = applyThreshold(type);
             } else {
                 f = forecastOne(type, current, today);
             }
             db.getForecasts().add(f);
-            // FR-15: a high risk triggers a prepared appeal, held for staff approval
             if (f.getRiskLevel().equals("High") && matching != null) matching.prepareAppeal(f);
         }
-        // keep the last 30 days of forecasts
         ArrayList<Forecast> list = db.getForecasts();
         for (int i = list.size() - 1; i >= 0; i--) {
             if (list.get(i).getForecastDate() < today - 30) list.remove(i);
         }
     }
 
-    /**
-     * Expected stock for each day of the horizon (an output of generateForecast, not stored).
-     * Uses the AI model when it beat the baseline, otherwise the 28-day averages.
-     */
     private double[] expectedStock(String type, long fromDay) {
         BloodBank bank = db.getBank();
         ArrayList<Stock> history = bank.history(type);
@@ -234,7 +203,6 @@ public class ForecastingModule {
             if (expected[d] < safe) daysUntilShort = d + 1;
         }
 
-        // FR-13: the factors behind the forecast, one per line
         StringBuilder factors = new StringBuilder();
         if (useAI) {
             factors.append(String.format("AI model (linear regression): MAE %.2f vs baseline %.2f",
@@ -265,7 +233,6 @@ public class ForecastingModule {
         return f;
     }
 
-    /** FR-9: High = below the safe level within 3 days, Medium = within 7, else Low. */
     public String classifyRisk(Forecast forecast, int safeLevel) {
         int days = forecast.getDaysUntilShort();
         if (days == -1 || days > 7) return "Low";
@@ -273,7 +240,6 @@ public class ForecastingModule {
         return "Medium";
     }
 
-    /** FR-10: units needed to be back at the safe level at the end of the horizon. */
     public int estimateUnits(Forecast forecast) {
         BloodBank bank = db.getBank();
         String type = forecast.getBloodType();
@@ -285,7 +251,6 @@ public class ForecastingModule {
         return (int) Math.max(0, Math.ceil(safe - expected[horizonDays - 1]));
     }
 
-    /** FR-11: not enough history, compare stock with the safe-stock threshold only. */
     public Forecast applyThreshold(String bloodType) {
         BloodBank bank = db.getBank();
         int units = bank.currentLevel(bloodType).getUnitsInStock();
@@ -297,11 +262,6 @@ public class ForecastingModule {
         return f;
     }
 
-    /**
-     * Sequence diagram "Monitor Shortages": loop over the 8 blood types calling
-     * Stock.currentLevel and Forecast.findLatest. High risk first (FR-12).
-     * If today's forecast cannot be made, the last one is shown with its date (extension 2b).
-     */
     public ArrayList<Forecast> getForecasts() {
         long today = QatraDatabase.today();
         Forecast any = Forecast.findLatest(db.getForecasts(), QatraDatabase.BLOOD_TYPES[0]);
@@ -319,7 +279,7 @@ public class ForecastingModule {
             Forecast latest = Forecast.findLatest(db.getForecasts(), type);
             if (stock != null && latest != null) result.add(latest);
         }
-        for (int i = 0; i < result.size(); i++) {               // simple bubble sort, High first
+        for (int i = 0; i < result.size(); i++) {
             for (int j = 0; j < result.size() - 1 - i; j++) {
                 if (result.get(j).riskOrder() > result.get(j + 1).riskOrder()) {
                     Forecast tmp = result.get(j);
@@ -331,7 +291,6 @@ public class ForecastingModule {
         return result;
     }
 
-    /** Forces a fresh forecast today (after new stock data). */
     public void refresh() {
         long today = QatraDatabase.today();
         ArrayList<Forecast> list = db.getForecasts();

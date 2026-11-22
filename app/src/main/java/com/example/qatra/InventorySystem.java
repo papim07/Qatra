@@ -2,10 +2,6 @@ package com.example.qatra;
 
 import java.util.Random;
 
-/**
- * <<boundary>> InventorySystem (external system, simulated).
- * Supplies one new Stock record per blood type for a date.
- */
 public class InventorySystem {
     private final QatraDatabase db;
     private final Random random = new Random();
@@ -14,7 +10,6 @@ public class InventorySystem {
         this.db = db;
     }
 
-    /** Returns how many records were imported. */
     public int importStock(long date) {
         BloodBank bank = db.getBank();
         int count = 0;
